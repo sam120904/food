@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 from listings.models import Listing, Claim
+from django.contrib.auth import get_user_model
 
 @login_required
 def admin_dashboard(request):
@@ -17,15 +18,20 @@ def admin_dashboard(request):
     
     # Recent activity
     recent_claims = Claim.objects.all().order_by('-claimed_at')[:10]
+    
+    # Users for leaderboard table in dashboard
+    User = get_user_model()
+    users_list = User.objects.all().order_by('-trust_score')[:5]
 
     return render(request, 'analytics/dashboard.html', {
         'total_kg': total_kg,
         'meals_served': meals_served,
         'co2_saved': co2_saved,
-        'recent_claims': recent_claims
+        'recent_claims': recent_claims,
+        'users_list': users_list
     })
 
-from django.contrib.auth import get_user_model
+
 
 def leaderboard_view(request):
     User = get_user_model()

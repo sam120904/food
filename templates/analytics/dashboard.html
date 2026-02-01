@@ -207,7 +207,8 @@
                         <td class="px-6 py-5">
                             <div class="flex flex-col gap-1 w-24">
                                 <div class="h-1.5 w-full bg-primary/20 rounded-full overflow-hidden">
-                                    <div class="h-full bg-primary" style="width: {{ user.trust_score }}%"></div>
+                                    <div class="h-full bg-primary" style="width: {{ user.trust_score|default:0 }}%;">
+                                    </div>
                                 </div>
                                 <p class="text-[10px] font-bold">{{ user.trust_score }}%</p>
                             </div>
