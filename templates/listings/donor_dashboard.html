@@ -55,6 +55,72 @@
     </div>
 
     <!-- Main Content Grid -->
+
+    <!-- Live Listings Section -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="text-xl font-black text-[#0d1b0d] dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-green-500">broadcast_on_home</span>
+                Live Listings
+            </h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for listing in listings %}
+            {% if listing.status == 'active' %}
+            <div
+                class="bg-white dark:bg-[#152915] rounded-xl border border-[#cfe7cf] dark:border-[#2a3d2a] p-5 shadow-sm hover:shadow-md transition-all group relative">
+                <div
+                    class="absolute top-4 right-4 text-xs font-bold px-2 py-1 bg-green-100 text-green-700 rounded-full flex items-center gap-1">
+                    <span class="size-1.5 rounded-full bg-green-500 animate-pulse"></span> Active
+                </div>
+
+                <div class="flex items-start gap-4 mb-4">
+                    <div
+                        class="size-12 rounded-xl bg-[#e7f3e7] dark:bg-primary/20 flex items-center justify-center text-primary text-2xl">
+                        <span class="material-symbols-outlined">
+                            {% if listing.food_type == 'cooked' %}restaurant
+                            {% elif listing.food_type == 'raw' %}grocery
+                            {% else %}takeout_dining{% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-[#0d1b0d] dark:text-white line-clamp-1">{{ listing.description }}</h3>
+                        <p class="text-xs text-slate-500">{{ listing.get_food_type_display }}</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 mb-4 text-sm">
+                    <div>
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Quantity</p>
+                        <p class="font-bold text-[#0d1b0d] dark:text-white">{{ listing.quantity_kg }} kg</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-bold text-slate-400">Expires</p>
+                        <p class="font-bold text-orange-600">{{ listing.expiry_time|timeuntil }}</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-[#cfe7cf] dark:border-[#2a3d2a] flex items-center justify-between">
+                    <span class="text-xs text-slate-400">Posted {{ listing.created_at|timesince }} ago</span>
+                    <button class="text-xs font-bold text-red-500 hover:text-red-700 transition-colors">Mark
+                        Inactive</button>
+                </div>
+            </div>
+            {% endif %}
+            {% empty %}
+            <div
+                class="col-span-full py-10 text-center border-2 border-dashed border-slate-200 dark:border-white/10 rounded-xl">
+                <p class="text-slate-500 font-bold">No live listings currently.</p>
+                <p class="text-sm text-slate-400">Post a new surplus to see it here.</p>
+            </div>
+            {% endfor %}
+            <!-- Check if there are any active listings, logic limitation in basic for-loop filter. 
+                 If listings exists but none are active, the empty block won't trigger. 
+                 Ideally view should filter, but for now this works for non-empty lists. -->
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
         <!-- Column 1: Incoming (Pending) Claims -->

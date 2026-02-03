@@ -2,29 +2,31 @@
 {% load static %}
 
 {% block content %}
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
 <div class="h-[calc(100vh-64px)] w-full flex bg-background-light dark:bg-black relative overflow-hidden">
 
-    <!-- 1. Left Map Area (Simplified as requested) -->
+    <!-- 1. Left Map Area -->
     <div class="flex-1 relative bg-[#e5e7eb] dark:bg-[#1f1f1f]">
-        <!-- Search, Map, Zoom controls remain same -->
-        <div class="absolute top-6 left-6 z-10 w-80">
+        <!-- Search, Map, Zoom controls -->
+        <div class="absolute top-6 left-6 z-[1000] w-80">
             <div
                 class="flex items-center gap-3 bg-white dark:bg-zinc-800 px-4 py-3 rounded-xl shadow-lg border border-gray-100 dark:border-white/5">
-                <span class="material-symbols-outlined text-green-500">search</span>
-                <input type="text" placeholder="Search area in Bangalore..."
+                <button id="searchBtn"
+                    class="material-symbols-outlined text-green-500 hover:text-green-600 transition-colors">search</button>
+                <input id="searchInput" type="text" placeholder="Search area (e.g. Delhi)..."
                     class="w-full bg-transparent border-none p-0 text-sm font-bold focus:ring-0 placeholder-gray-400">
             </div>
         </div>
 
-        <canvas id="foodMap"
-            class="absolute inset-0 w-full h-full cursor-pointer focus:outline-none opacity-80"></canvas>
+        <!-- Real Map Container -->
+        <div id="foodMap" class="absolute inset-0 w-full h-full z-0"></div>
 
-        <div class="absolute bottom-6 right-6 flex flex-col gap-2">
-            <button onclick="zoomIn()"
-                class="size-10 bg-white dark:bg-zinc-800 shadow-md rounded-lg flex items-center justify-center font-bold text-xl hover:bg-gray-50">+</button>
-            <button onclick="zoomOut()"
-                class="size-10 bg-white dark:bg-zinc-800 shadow-md rounded-lg flex items-center justify-center font-bold text-xl hover:bg-gray-50">-</button>
-        </div>
     </div>
 
     <!-- 2. Right Sidebar Listings -->
@@ -57,7 +59,9 @@
             <!-- Card -->
             <div class="listing-card bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-transparent hover:border-green-400 hover:shadow-md transition-all group"
                 data-type="{{ listing.food_type }}"
-                data-veg="{% if listing.food_type == 'packaged' %}non-veg{% else %}veg{% endif %}">
+                data-veg="{% if listing.food_type == 'packaged' %}non-veg{% else %}veg{% endif %}"
+                data-lat="{{ listing.donor.latitude|default:0 }}" data-lng="{{ listing.donor.longitude|default:0 }}"
+                data-id="{{ listing.id }}">
 
                 <div class="flex justify-between mb-4">
                     <div class="flex gap-4">
@@ -139,55 +143,52 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('foodMap');
-        const ctx = canvas.getContext('2d');
-        let scale = 1;
+        // Initialize Map
+        // Default to Bangalore (12.9716, 77.5946) if no location
+        var map = L.map('foodMap').setView([12.9716, 77.5946], 13);
 
-        function resize() {
-            if (!canvas.parentElement) return;
-            canvas.width = canvas.parentElement.offsetWidth;
-            canvas.height = canvas.parentElement.offsetHeight;
-            draw();
-        }
-        window.addEventListener('resize', resize);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-        function draw() {
-            if (!canvas.width) return;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.strokeStyle = '#d1d5db';
-            ctx.lineWidth = 4;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height / 2);
-            ctx.bezierCurveTo(canvas.width / 3, canvas.height / 3, canvas.width / 1.5, canvas.height / 1.5, canvas.width, canvas.height / 2);
-            ctx.stroke();
+        var markers = [];
 
-            ctx.beginPath();
-            ctx.moveTo(canvas.width / 2, 0);
-            ctx.lineTo(canvas.width / 2.5, canvas.height);
-            ctx.stroke();
+        // Add markers from listings
+        {% for listing in listings %}
+        {% if listing.donor.latitude and listing.donor.longitude %}
+        var lat = {{ listing.donor.latitude }};
+        var lng = {{ listing.donor.longitude }};
+        var title = "{{ listing.description|escapejs }}";
+        var donor = "{{ listing.donor.institution_name|default:listing.donor.username|escapejs }}";
+        var quantity = "{{ listing.quantity_kg }}";
 
-            drawPin(canvas.width / 2 + 40, canvas.height / 2 - 60, '#13ec13');
-            drawPin(canvas.width / 3, canvas.height / 1.5, '#ef4444');
-            drawPin(canvas.width / 1.5, canvas.height / 3, '#13ec13');
-        }
+        var markerIcon = L.divIcon({
+            className: 'custom-div-icon',
+            html: "<div style='background-color:#13ec13; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; display:flex; align-items:center; justify-content:center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);'><span class='material-symbols-outlined' style='font-size:18px; color:black;'>restaurant</span></div>",
+            iconSize: [30, 30],
+            iconAnchor: [15, 15]
+        });
 
-        function drawPin(x, y, color) {
-            ctx.beginPath();
-            ctx.fillStyle = color;
-            ctx.arc(x, y, 15, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = 'white';
-            ctx.font = '14px Material Symbols Outlined';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText('restaurant', x, y);
-        }
-        function zoomIn() { scale *= 1.1; draw(); }
-        function zoomOut() { scale /= 1.1; draw(); }
-        setTimeout(resize, 100);
+        var marker = L.marker([lat, lng], { icon: markerIcon }).addTo(map);
 
+        var popupContent = `
+                    <div class="font-sans">
+                        <h3 class="font-bold text-sm mb-1">${title}</h3>
+                        <p class="text-xs text-gray-600 mb-1">by ${donor}</p>
+                        <p class="text-xs font-bold text-green-600">${quantity} kg available</p>
+                    </div>
+                `;
+
+        marker.bindPopup(popupContent);
+        markers.push(marker);
+        {% endif %}
+        {% endfor %}
+
+        // Filter Logic
         const btns = document.querySelectorAll('.filter-btn');
         const cards = document.querySelectorAll('.listing-card');
+
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
                 btns.forEach(b => {
@@ -204,5 +205,66 @@
                 });
             });
         });
+
+        // Interaction between cards and map
+        cards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                const lat = card.dataset.lat;
+                const lng = card.dataset.lng;
+                if (lat && lng && lat != 0 && lng != 0) {
+                    map.flyTo([lat, lng], 15, {
+                        animate: true,
+                        duration: 0.5
+                    });
+                }
+            });
+        });
+
+        // Search Functionality
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+
+        async function searchLocation() {
+            const query = searchInput.value;
+            if (!query) return;
+
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data && data.length > 0) {
+                    const lat = parseFloat(data[0].lat);
+                    const lon = parseFloat(data[0].lon);
+                    map.flyTo([lat, lon], 12);
+                } else {
+                    alert('Location not found');
+                }
+            } catch (error) {
+                console.error('Error searching location:', error);
+                alert('Error searching location');
+            }
+        }
+
+        searchBtn.addEventListener('click', searchLocation);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchLocation();
+            }
+        });
     </script>
+    <style>
+        /* Fix for Leaflet z-index issues with sidebar */
+        .leaflet-pane {
+            z-index: 0 !important;
+        }
+
+        .leaflet-control {
+            z-index: 10 !important;
+        }
+
+        .leaflet-top,
+        .leaflet-bottom {
+            z-index: 10 !important;
+        }
+    </style>
     {% endblock %}

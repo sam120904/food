@@ -68,17 +68,29 @@ def analytics_dashboard(request):
     if request.user.role != 'donor':
         return redirect('dashboard')
         
-    # Simple analytics for the donor
-    listings = Listing.objects.filter(donor=request.user)
+    # Get recent listings for the hotel (donor)
+    listings = Listing.objects.filter(donor=request.user).order_by('-created_at')
+    
+    # Prepare data for AI analysis (last 20 items to identify trends)
+    recent_items = listings[:20]
+    ai_context_data = []
+    for item in recent_items:
+        ai_context_data.append({
+            'date': item.created_at.strftime("%Y-%m-%d"),
+            'quantity': item.quantity_kg,
+            'food_type': item.get_food_type_display()
+        })
+    
     total_listings = listings.count()
     total_quantity = listings.aggregate(Sum('quantity_kg'))['quantity_kg__sum'] or 0
     
-    # AI Prediction (Mock or Real)
-    prediction = get_surplus_prediction()
+    # Get Real AI Prediction
+    prediction = get_surplus_prediction(ai_context_data)
     
     context = {
         'total_listings': total_listings,
         'total_quantity': total_quantity,
         'prediction': prediction,
+        'recent_listings': recent_items,  # Pass listings to template for display
     }
     return render(request, 'analytics/analytics_dashboard.html', context)

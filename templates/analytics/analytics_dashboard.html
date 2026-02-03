@@ -1,63 +1,162 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto px-4 py-8">
-    <div class="mb-8">
-        <h1 class="text-3xl font-black text-[#0d1b0d] dark:text-white mb-2">AI Impact Analytics</h1>
-        <p class="text-slate-500">Pattern analysis and waste reduction insights for {{
-            user.institution_name|default:user.username }}.</p>
+<div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-10 flex flex-col md:flex-row justify-between items-end gap-4">
+        <div>
+            <div
+                class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold uppercase tracking-wider mb-2">
+                <span class="material-symbols-outlined text-sm">auto_awesome</span>
+                GenAI Powered
+            </div>
+            <h1 class="text-4xl font-black text-[#0d1b0d] dark:text-white mb-2">Smart Analytics</h1>
+            <p class="text-slate-500 max-w-2xl">Real-time analysis of your food donation patterns to optimize surplus
+                management.</p>
+        </div>
+        <div class="text-right">
+            <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">Total Impact</p>
+            <p class="text-3xl font-black text-[#0d1b0d] dark:text-white">{{ total_quantity }} <span
+                    class="text-base text-slate-400">kg saved</span></p>
+        </div>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Stats Cards -->
-        <div class="space-y-6">
+        <!-- Left Column: Hotel Data (Listings) -->
+        <div class="lg:col-span-2 space-y-8">
+            <!-- Data Table Card -->
             <div
-                class="bg-white dark:bg-[#152915] p-6 rounded-2xl border border-[#cfe7cf] dark:border-[#2a3d2a] shadow-sm">
-                <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider mb-2">Total Donated</h3>
-                <p class="text-4xl font-black text-[#0d1b0d] dark:text-white">{{ total_quantity }} <span
-                        class="text-lg text-slate-400 font-bold">kg</span></p>
-            </div>
+                class="bg-white dark:bg-[#1f1f1f] rounded-3xl p-8 shadow-sm border border-slate-100 dark:border-white/5">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex items-center gap-3">
+                        <div
+                            class="size-10 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+                            <span
+                                class="material-symbols-outlined text-slate-600 dark:text-slate-300">table_chart</span>
+                        </div>
+                        <h2 class="text-xl font-bold text-[#0d1b0d] dark:text-white">Recent Hotel Data</h2>
+                    </div>
+                    <button class="text-sm font-bold text-green-600 hover:text-green-700">Export CSV</button>
+                </div>
 
-            <div
-                class="bg-white dark:bg-[#152915] p-6 rounded-2xl border border-[#cfe7cf] dark:border-[#2a3d2a] shadow-sm">
-                <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider mb-2">Listings Created</h3>
-                <p class="text-4xl font-black text-[#0d1b0d] dark:text-white">{{ total_listings }}</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="border-b border-slate-100 dark:border-white/5">
+                                <th class="pb-4 font-bold text-xs text-slate-400 uppercase tracking-wider">Date</th>
+                                <th class="pb-4 font-bold text-xs text-slate-400 uppercase tracking-wider">Item</th>
+                                <th class="pb-4 font-bold text-xs text-slate-400 uppercase tracking-wider">Type</th>
+                                <th class="pb-4 font-bold text-xs text-slate-400 uppercase tracking-wider">Quantity</th>
+                                <th class="pb-4 font-bold text-xs text-slate-400 uppercase tracking-wider text-right">
+                                    Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 dark:divide-white/5">
+                            {% for item in recent_listings %}
+                            <tr class="group hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                <td class="py-4 text-sm font-bold text-slate-600 dark:text-slate-300">{{
+                                    item.created_at|date:"M d, Y" }}</td>
+                                <td class="py-4">
+                                    <div class="text-sm font-bold text-[#0d1b0d] dark:text-white">{{
+                                        item.description|truncatechars:30 }}</div>
+                                </td>
+                                <td class="py-4">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/10 text-xs font-bold text-slate-600 dark:text-slate-300 capitalize">
+                                        {{ item.food_type }}
+                                    </span>
+                                </td>
+                                <td class="py-4 text-sm font-bold text-[#0d1b0d] dark:text-white">{{ item.quantity_kg }}
+                                    kg</td>
+                                <td class="py-4 text-right">
+                                    {% if item.status == 'active' %}
+                                    <span class="inline-flex size-2 rounded-full bg-green-500"></span>
+                                    {% else %}
+                                    <span class="inline-flex size-2 rounded-full bg-slate-300"></span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="py-8 text-center text-slate-400">No data available for analysis
+                                    yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
-        <!-- AI Insight Card -->
-        <div class="lg:col-span-2">
-            <div
-                class="h-full bg-gradient-to-br from-[#0d1b0d] to-[#1a3a1a] text-white p-8 rounded-3xl shadow-xl relative overflow-hidden">
-                <!-- Background decorative elements -->
+        <!-- Right Column: AI Analysis -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-6">
                 <div
-                    class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-green-500 blur-[100px] opacity-20 rounded-full">
-                </div>
-
-                <div class="relative z-10">
-                    <div class="flex items-center gap-3 mb-6">
-                        <span class="material-symbols-outlined text-green-400 text-3xl">psychology</span>
-                        <h2 class="text-2xl font-bold">GenAI Waste Insights</h2>
+                    class="bg-gradient-to-br from-[#0d1b0d] to-[#1a3a1a] text-white p-8 rounded-3xl shadow-xl relative overflow-hidden mb-6">
+                    <!-- Background Effects -->
+                    <div
+                        class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 bg-green-500 blur-[100px] opacity-20 rounded-full">
+                    </div>
+                    <div
+                        class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 bg-blue-500 blur-[100px] opacity-20 rounded-full">
                     </div>
 
-                    <div class="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/10">
-                        <p class="text-green-300 font-mono text-xs mb-2 uppercase tracking-widest">
-                            {% if prediction.status == 'mock' %}Analysis (Simulation){% else %}Live Analysis{% endif %}
-                        </p>
-                        <p class="text-lg md:text-xl leading-relaxed font-medium">
-                            "{{ prediction.prediction }}"
-                        </p>
-                    </div>
-
-                    <div class="mt-8 flex items-center gap-4">
-                        <div class="text-xs text-white/50">
-                            Powered by <span class="font-bold text-white">Google Gemini</span>
+                    <div class="relative z-10">
+                        <div class="flex items-center gap-3 mb-6">
+                            <div
+                                class="size-12 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-md border border-white/10 shadow-inner">
+                                <span class="material-symbols-outlined text-green-400 text-2xl">psychology</span>
+                            </div>
+                            <div>
+                                <h2 class="text-xl font-bold">Gemini Analysis</h2>
+                                <p class="text-xs text-white/50">Powered by Google AI</p>
+                            </div>
                         </div>
+
+                        <div class="bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 relative group">
+                            <div
+                                class="absolute -inset-0.5 bg-gradient-to-r from-green-500 to-blue-500 rounded-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500 blur">
+                            </div>
+
+                            <div class="relative">
+                                <p
+                                    class="text-green-300 font-mono text-[10px] mb-3 uppercase tracking-widest flex items-center gap-2">
+                                    {% if prediction.status == 'mock' %}
+                                    <span class="size-1.5 rounded-full bg-yellow-500"></span> Simulation Mode
+                                    {% else %}
+                                    <span class="size-1.5 rounded-full bg-green-500 animate-pulse"></span> Live Analysis
+                                    {% endif %}
+                                </p>
+                                <div class="text-sm md:text-base leading-relaxed font-medium text-slate-100">
+                                    {{ prediction.prediction|linebreaksbr }}
+                                </div>
+                            </div>
+                        </div>
+
                         <button onclick="window.location.reload()"
-                            class="ml-auto px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-bold transition-all flex items-center gap-2">
-                            <span class="material-symbols-outlined text-sm">refresh</span> Refresh Analysis
+                            class="w-full mt-6 py-4 bg-white text-[#0d1b0d] rounded-xl font-bold hover:bg-slate-100 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-black/20">
+                            <span class="material-symbols-outlined">refresh</span>
+                            Update Analysis
                         </button>
                     </div>
+                </div>
+
+                <!-- Tips Card -->
+                <div class="bg-white dark:bg-[#1f1f1f] p-6 rounded-3xl border border-slate-100 dark:border-white/5">
+                    <h3 class="font-bold text-[#0d1b0d] dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-yellow-500">lightbulb</span>
+                        Quick Tips
+                    </h3>
+                    <ul class="space-y-3">
+                        <li class="text-sm text-slate-600 dark:text-slate-400 flex gap-2">
+                            <span class="text-green-500 font-bold">•</span>
+                            Consistent donation times improve claimant pickup rates by 40%.
+                        </li>
+                        <li class="text-sm text-slate-600 dark:text-slate-400 flex gap-2">
+                            <span class="text-green-500 font-bold">•</span>
+                            Grouping small packages reduces transport carbon footprint.
+                        </li>
+                    </ul>
                 </div>
             </div>
         </div>
