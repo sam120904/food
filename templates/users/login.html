@@ -28,19 +28,59 @@
                         Claimant
                     </button>
                 </div>
+
+                <!-- FSSAI Guidelines Section -->
+                <div id="fssai-guidelines"
+                    class="mt-6 mx-8 p-4 bg-[#effbef] dark:bg-green-900/10 border border-[#e7f3e7] dark:border-green-800/30 rounded-xl transition-all duration-300 animate-fade-in">
+                    <div class="flex items-start gap-3">
+                        <div class="p-1.5 bg-white dark:bg-green-900/30 rounded-full shrink-0">
+                            <span class="material-symbols-outlined text-primary text-lg">health_and_safety</span>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-[#0d1b0d] dark:text-white text-sm mb-1">FSSAI Safety Standards
+                            </h3>
+                            <p class="text-zinc-500 dark:text-zinc-400 text-xs mb-2 leading-relaxed">
+                                By logging in as a donor/restaurant, you verify adherence to FSSAI guidelines:
+                            </p>
+                            <ul class="space-y-1.5 mt-2">
+                                <li class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <span class="w-1 h-1 rounded-full bg-primary shrink-0"></span>
+                                    <span>Ensure food is safe & within shelf life</span>
+                                </li>
+                                <li class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <span class="w-1 h-1 rounded-full bg-primary shrink-0"></span>
+                                    <span>Maintain hygiene during prep & packing</span>
+                                </li>
+                                <li class="flex items-center gap-2 text-xs text-zinc-600 dark:text-zinc-400">
+                                    <span class="w-1 h-1 rounded-full bg-primary shrink-0"></span>
+                                    <span>Label prepared food with consumption time</span>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <script>
                 function selectLoginRole(role) {
                     const btnDonor = document.getElementById('btn-login-donor');
                     const btnClaimant = document.getElementById('btn-login-claimant');
+                    const guidelines = document.getElementById('fssai-guidelines');
 
                     if (role === 'donor') {
                         btnDonor.className = "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-white dark:bg-zinc-700 text-primary";
                         btnClaimant.className = "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all text-zinc-500 hover:text-zinc-700 dark:text-zinc-400";
+                        guidelines.style.display = "block";
+                        // Add fade animation reset
+                        guidelines.classList.remove('opacity-0', 'scale-95');
+                        guidelines.classList.add('opacity-100', 'scale-100');
                     } else {
                         btnClaimant.className = "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all shadow-sm bg-white dark:bg-zinc-700 text-primary";
                         btnDonor.className = "flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all text-zinc-500 hover:text-zinc-700 dark:text-zinc-400";
+                        guidelines.style.display = "none";
+                        // Add fade animation
+                        guidelines.classList.add('opacity-0', 'scale-95');
+                        guidelines.classList.remove('opacity-100', 'scale-100');
                     }
                 }
             </script>
@@ -104,4 +144,24 @@
         </p>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
 {% endblock %}

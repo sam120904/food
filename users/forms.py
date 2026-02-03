@@ -19,3 +19,21 @@ class CustomUserCreationForm(UserCreationForm):
         if role == 'claimant' and not cleaned_data.get('ngo_registration'):
             self.add_error('ngo_registration', 'NGO Registration is required for Claimants.')
         return cleaned_data
+
+    def clean_restaurant_license(self):
+        license_no = self.cleaned_data.get('restaurant_license')
+        if license_no:
+            if not license_no.isdigit():
+                raise forms.ValidationError("FSSAI License must contain only digits.")
+            if len(license_no) != 14:
+                raise forms.ValidationError("FSSAI License must be exactly 14 digits.")
+        return license_no
+
+    def clean_ngo_registration(self):
+        reg_no = self.cleaned_data.get('ngo_registration')
+        if reg_no:
+            if not reg_no.isdigit():
+                raise forms.ValidationError("NGO Registration Number must contain only digits.")
+            if len(reg_no) != 14:
+                raise forms.ValidationError("NGO Registration Number must be exactly 14 digits.")
+        return reg_no
