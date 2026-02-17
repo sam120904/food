@@ -122,8 +122,10 @@ def add_volunteer(request):
                 )
                 try:
                     send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [email])
-                except Exception:
-                    pass  # Don't block volunteer creation if email fails
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Failed to send volunteer invitation email to {email}: {e}")
 
     return redirect('claimant_dashboard')
 

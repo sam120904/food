@@ -93,20 +93,48 @@ def claimant_dashboard(request):
         status='pending'
     ).values_list('listing_id', flat=True)
 
-    # Get approved claims (ready for volunteer assignment)
-    approved_claims = Claim.objects.filter(
+    # --- Claims Management ---
+    
+    # 1. Pending Approval (Waitlist)
+    pending_claims = Claim.objects.filter(
+        claimant=request.user, 
+        status='pending'
+    ).select_related('listing', 'listing__donor').order_by('-claimed_at')
+    
+    # 2. Approved Claims (Need assignment)
+    # Get all approved claims first
+    approved_claims_qs = Claim.objects.filter(
         claimant=request.user,
         status='approved'
     ).select_related('listing', 'listing__donor').order_by('-claimed_at')
+    
+    # Identify which approved claims already have an assignment
+    assigned_claim_ids = PickupAssignment.objects.filter(
+        claim__in=approved_claims_qs
+    ).values_list('claim_id', flat=True)
+    
+    # Filter: Unassigned (Action Required)
+    unassigned_claims = approved_claims_qs.exclude(id__in=assigned_claim_ids)
+    
+    # Filter: Assigned (In Progress)
+    assigned_pickup_tasks = PickupAssignment.objects.filter(
+        claim__in=approved_claims_qs
+    ).select_related('claim', 'volunteer', 'claim__listing', 'claim__listing__donor').order_by('-assigned_at')
 
     return render(request, 'listings/claimant_dashboard.html', {
         'listings': listings, 
         'pending_claim_ids': my_pending_claims_ids,
+        
+        # Volunteer Data
         'volunteers': volunteers,
         'active_volunteers': active_volunteers,
         'active_volunteers_list': active_volunteers_list,
         'total_volunteers': total_volunteers,
-        'approved_claims': approved_claims,
+        
+        # Claims Data
+        'pending_claims': pending_claims,
+        'unassigned_claims': unassigned_claims,
+        'assigned_pickup_tasks': assigned_pickup_tasks,
     })
 
 
