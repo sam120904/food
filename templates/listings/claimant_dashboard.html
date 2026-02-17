@@ -258,8 +258,7 @@
                                 <span class="material-symbols-outlined text-red-500">priority_high</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-black dark:text-white text-sm">{{
-                                    claim.listing.description|truncatechars:35 }}</h3>
+                                <h3 class="font-bold text-black dark:text-white text-sm">{{ claim.listing.description|truncatechars:35 }}</h3>
                                 <p class="text-xs text-gray-500 dark:text-gray-400">
                                     {{ claim.listing.donor.institution_name|default:claim.listing.donor.username }} · {{
                                     claim.listing.quantity_kg }} kg
@@ -308,8 +307,7 @@
                                     class="material-symbols-outlined text-blue-600 dark:text-blue-400">local_shipping</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-black dark:text-white text-sm">{{
-                                    task.claim.listing.description|truncatechars:35 }}</h3>
+                                <h3 class="font-bold text-black dark:text-white text-sm">{{ task.claim.listing.description|truncatechars:35 }}</h3>
                                 <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span class="flex items-center gap-1">
                                         <span class="material-symbols-outlined text-[10px]">person</span>
@@ -350,8 +348,7 @@
                                 <span class="material-symbols-outlined text-gray-400">hourglass_empty</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-600 dark:text-gray-400 text-sm">{{
-                                    claim.listing.description|truncatechars:35 }}</h3>
+                                <h3 class="font-bold text-gray-600 dark:text-gray-400 text-sm">{{ claim.listing.description|truncatechars:35 }}</h3>
                                 <p class="text-xs text-gray-400">Waiting for donor approval</p>
                             </div>
                         </div>
