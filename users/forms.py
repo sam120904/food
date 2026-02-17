@@ -37,3 +37,10 @@ class CustomUserCreationForm(UserCreationForm):
             if len(reg_no) != 14:
                 raise forms.ValidationError("NGO Registration Number must be exactly 14 digits.")
         return reg_no
+
+
+class VolunteerForm(forms.ModelForm):
+    class Meta:
+        from .models import Volunteer
+        model = Volunteer
+        fields = ('name', 'phone', 'email', 'address')

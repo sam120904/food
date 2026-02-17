@@ -9,6 +9,283 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
+<!-- ========== VOLUNTEER SECTION ========== -->
+<div class="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/10">
+    <div class="max-w-[1400px] mx-auto px-6 py-5">
+        <!-- Header Row -->
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400">groups</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black text-black dark:text-white">Our Volunteers</h2>
+                    <p class="text-xs text-gray-400">Manage your team of food heroes</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Stats Pills -->
+                <div class="flex gap-2">
+                    <span
+                        class="px-3 py-1.5 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-xs font-bold rounded-full flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        {{ active_volunteers }} Active
+                    </span>
+                    <span
+                        class="px-3 py-1.5 bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400 text-xs font-bold rounded-full">
+                        {{ total_volunteers }} Total
+                    </span>
+                </div>
+                <!-- Add Volunteer Button -->
+                <button onclick="toggleAddForm()" id="btn-add-volunteer"
+                    class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold text-white bg-primary hover:brightness-110 rounded-lg transition-all shadow-sm shadow-primary/20">
+                    <span class="material-symbols-outlined text-sm">person_add</span>
+                    Add Volunteer
+                </button>
+                <!-- Toggle Button -->
+                <button onclick="toggleVolunteerSection()" id="toggle-volunteers-btn"
+                    class="flex items-center gap-1 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-gray-700 dark:text-gray-400 bg-gray-100 dark:bg-zinc-800 rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-sm" id="toggle-icon">expand_more</span>
+                    <span id="toggle-text">Show</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Volunteer Table (Collapsible) -->
+        <div id="volunteer-section" class="hidden animate-fade-in">
+            {% if volunteers %}
+            <div class="overflow-x-auto rounded-xl border border-gray-200 dark:border-zinc-700">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="bg-gray-50 dark:bg-zinc-800 text-left">
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Volunteer
+                                ID</th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Name</th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Phone
+                            </th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Email
+                            </th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Address
+                            </th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Status
+                            </th>
+                            <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Joined
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
+                        {% for vol in volunteers %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                            <td class="px-4 py-3">
+                                <span
+                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">{{
+                                    vol.volunteer_id }}</span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <div class="flex items-center gap-2">
+                                    <div
+                                        class="size-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
+                                        {{ vol.name|slice:":1"|upper }}
+                                    </div>
+                                    <span class="font-bold text-black dark:text-white">{{ vol.name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ vol.phone|default:"—" }}</td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ vol.email|default:"—" }}</td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[150px] truncate">{{
+                                vol.address|default:"—" }}</td>
+                            <td class="px-4 py-3">
+                                {% if vol.status == 'active' %}
+                                <span
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                    <span class="w-1 h-1 rounded-full bg-green-500"></span> Active
+                                </span>
+                                {% else %}
+                                <span
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-gray-100 dark:bg-zinc-700 text-gray-500">
+                                    <span class="w-1 h-1 rounded-full bg-gray-400"></span> Inactive
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 text-xs text-gray-400">{{ vol.date_joined|date:"M d, Y" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-8 border border-dashed border-gray-200 dark:border-zinc-700 rounded-xl">
+                <div
+                    class="size-14 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <span class="material-symbols-outlined text-2xl text-gray-400">person_add</span>
+                </div>
+                <p class="font-bold text-gray-500 dark:text-gray-400 text-sm">No volunteers yet</p>
+                <p class="text-xs text-gray-400 mt-1">Click "Add Volunteer" above to add your first volunteer.</p>
+            </div>
+            {% endif %}
+
+            <!-- Add Volunteer Inline Form -->
+            <div id="add-volunteer-form"
+                class="hidden mt-4 p-5 rounded-xl border border-primary/30 bg-green-50/50 dark:bg-green-900/10 animate-fade-in">
+                <div class="flex items-center gap-2 mb-4">
+                    <span class="material-symbols-outlined text-primary">person_add</span>
+                    <h3 class="font-bold text-sm text-black dark:text-white">Add New Volunteer</h3>
+                </div>
+                <form method="post" action="{% url 'add_volunteer' %}">
+                    {% csrf_token %}
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Name *</label>
+                            <input type="text" name="name" required
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                placeholder="Volunteer name">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Phone</label>
+                            <input type="text" name="phone"
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                placeholder="Phone number">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Email</label>
+                            <input type="email" name="email"
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                placeholder="email@example.com">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Address</label>
+                            <input type="text" name="address"
+                                class="w-full px-3 py-2 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                                placeholder="Full address">
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-end gap-3 mt-4">
+                        <button type="button" onclick="toggleAddForm()"
+                            class="px-4 py-2 text-xs font-bold text-gray-500 hover:text-gray-700 bg-gray-100 dark:bg-zinc-800 rounded-lg transition-colors">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="flex items-center gap-1.5 px-5 py-2 text-xs font-bold text-black bg-primary hover:brightness-110 rounded-lg transition-all shadow-sm shadow-primary/20">
+                            <span class="material-symbols-outlined text-sm">check</span>
+                            Save Volunteer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleVolunteerSection() {
+        const section = document.getElementById('volunteer-section');
+        const icon = document.getElementById('toggle-icon');
+        const text = document.getElementById('toggle-text');
+
+        if (section.classList.contains('hidden')) {
+            section.classList.remove('hidden');
+            icon.textContent = 'expand_less';
+            text.textContent = 'Hide';
+        } else {
+            section.classList.add('hidden');
+            icon.textContent = 'expand_more';
+            text.textContent = 'Show';
+        }
+    }
+
+    function toggleAddForm() {
+        const form = document.getElementById('add-volunteer-form');
+        const section = document.getElementById('volunteer-section');
+        const icon = document.getElementById('toggle-icon');
+        const text = document.getElementById('toggle-text');
+
+        // Always show the volunteer section when opening the form
+        if (section.classList.contains('hidden')) {
+            section.classList.remove('hidden');
+            icon.textContent = 'expand_less';
+            text.textContent = 'Hide';
+        }
+
+        form.classList.toggle('hidden');
+        if (!form.classList.contains('hidden')) {
+            form.querySelector('input[name="name"]').focus();
+        }
+    }
+</script>
+<!-- ========== END VOLUNTEER SECTION ========== -->
+
+<!-- ========== ASSIGN PICKUPS SECTION ========== -->
+{% if approved_claims %}
+<div class="bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/10">
+    <div class="max-w-[1400px] mx-auto px-6 py-5">
+        <div class="flex items-center gap-3 mb-4">
+            <div class="size-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                <span class="material-symbols-outlined text-orange-600 dark:text-orange-400">local_shipping</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-black text-black dark:text-white">Assign Pickups</h2>
+                <p class="text-xs text-gray-400">Assign approved claims to your active volunteers for pickup</p>
+            </div>
+            <span
+                class="ml-auto px-3 py-1.5 bg-orange-50 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 text-xs font-bold rounded-full">
+                {{ approved_claims|length }} to assign
+            </span>
+        </div>
+
+        <div class="space-y-3">
+            {% for claim in approved_claims %}
+            <div
+                class="p-4 rounded-xl border border-gray-200 dark:border-zinc-700 bg-gray-50 dark:bg-zinc-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <!-- Claim Details -->
+                <div class="flex items-center gap-3 flex-1">
+                    {% if claim.listing.food_type == 'cooked' %}
+                    <div class="size-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined">restaurant</span>
+                    </div>
+                    {% elif claim.listing.food_type == 'raw' %}
+                    <div class="size-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined">grocery</span>
+                    </div>
+                    {% else %}
+                    <div class="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <span class="material-symbols-outlined">takeout_dining</span>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h3 class="font-bold text-black dark:text-white text-sm">{{
+                            claim.listing.description|truncatechars:35 }}</h3>
+                        <p class="text-xs text-gray-400">
+                            {{ claim.listing.donor.institution_name|default:claim.listing.donor.username }}
+                            · {{ claim.listing.quantity_kg }} kg
+                            · Expires {{ claim.listing.expiry_time|timeuntil }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Assign Form -->
+                <form method="post" action="{% url 'assign_volunteer' claim.id %}" class="flex items-center gap-2">
+                    {% csrf_token %}
+                    <select name="volunteer_id" required
+                        class="px-3 py-2 text-xs font-bold rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                        <option value="">Select Volunteer</option>
+                        {% for vol in active_volunteers_list %}
+                        <option value="{{ vol.id }}">{{ vol.name }} ({{ vol.volunteer_id }})</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit"
+                        class="flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-black bg-primary hover:brightness-110 rounded-lg transition-all shadow-sm shadow-primary/20">
+                        <span class="material-symbols-outlined text-sm">assignment_ind</span>
+                        Assign
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+<!-- ========== END ASSIGN PICKUPS SECTION ========== -->
+
 <div class="h-[calc(100vh-64px)] w-full flex bg-background-light dark:bg-black relative overflow-hidden">
 
     <!-- 1. Left Map Area -->

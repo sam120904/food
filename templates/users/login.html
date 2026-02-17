@@ -85,10 +85,9 @@
                 }
             </script>
 
-            {% if form.errors %}
+            {% if error %}
             <div class="mb-4 p-4 rounded-md bg-red-50 text-red-700 text-sm">
-                <p class="font-bold">Please correct the errors below:</p>
-                {{ form.non_field_errors }}
+                <p class="font-bold">{{ error }}</p>
             </div>
             {% endif %}
 

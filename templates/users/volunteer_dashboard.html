@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Volunteer Dashboard — Food Saver{% endblock %}
+
+{% block content %}
+<div class="px-6 py-8 max-w-6xl mx-auto space-y-8">
+
+    <!-- ========== VOLUNTEER STATUS HEADER ========== -->
+    <div
+        class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+        <div class="p-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <!-- Profile Info -->
+            <div class="flex items-center gap-4">
+                <div
+                    class="size-16 rounded-2xl bg-primary/10 flex items-center justify-center text-primary text-2xl font-black border-2 border-primary/20">
+                    {{ volunteer.name|slice:":1"|upper }}
+                </div>
+                <div>
+                    <h1 class="text-2xl font-black text-black dark:text-white">{{ volunteer.name }}</h1>
+                    <div class="flex items-center gap-3 mt-1">
+                        <span
+                            class="font-mono text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">{{
+                            volunteer.volunteer_id }}</span>
+                        <span class="text-xs text-gray-400">•</span>
+                        <span class="text-xs text-gray-500">{{
+                            volunteer.ngo.institution_name|default:volunteer.ngo.username }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status & Toggle -->
+            <div class="flex items-center gap-4">
+                {% if volunteer.status == 'active' %}
+                <div
+                    class="flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+                    <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+                    <span class="text-sm font-bold text-green-700 dark:text-green-400">Active</span>
+                </div>
+                {% else %}
+                <div
+                    class="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 dark:bg-zinc-800 border border-gray-200 dark:border-zinc-700">
+                    <span class="w-2.5 h-2.5 rounded-full bg-gray-400"></span>
+                    <span class="text-sm font-bold text-gray-500">Inactive</span>
+                </div>
+                {% endif %}
+
+                <form method="post" action="{% url 'toggle_volunteer_status' %}">
+                    {% csrf_token %}
+                    {% if volunteer.status == 'active' %}
+                    <button type="submit"
+                        class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-sm">toggle_off</span>
+                        Go Inactive
+                    </button>
+                    {% else %}
+                    <button type="submit"
+                        class="flex items-center gap-2 px-4 py-2 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 border border-green-200 rounded-lg transition-all">
+                        <span class="material-symbols-outlined text-sm">toggle_on</span>
+                        Go Active
+                    </button>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="grid grid-cols-3 border-t border-gray-100 dark:border-zinc-800">
+            <div class="p-4 text-center border-r border-gray-100 dark:border-zinc-800">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Active Pickups</p>
+                <p class="text-2xl font-black text-black dark:text-white mt-1">{{ active_assignments.count }}</p>
+            </div>
+            <div class="p-4 text-center border-r border-gray-100 dark:border-zinc-800">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Completed</p>
+                <p class="text-2xl font-black text-primary mt-1">{{ completed_assignments.count }}</p>
+            </div>
+            <div class="p-4 text-center">
+                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Status</p>
+                <p
+                    class="text-2xl font-black mt-1 {% if volunteer.status == 'active' %}text-green-500{% else %}text-gray-400{% endif %}">
+                    {{ volunteer.status|title }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== ACTIVE PICKUP ASSIGNMENTS ========== -->
+    <div
+        class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+        <div class="p-6 flex items-center justify-between border-b border-gray-100 dark:border-zinc-800">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-orange-50 dark:bg-orange-900/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-orange-600">local_shipping</span>
+                </div>
+                <div>
+                    <h2 class="text-lg font-black text-black dark:text-white">Active Pickups</h2>
+                    <p class="text-xs text-gray-400">Assigned by your NGO — pick up and deliver</p>
+                </div>
+            </div>
+            {% if active_assignments %}
+            <span class="px-3 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-full">{{
+                active_assignments.count }} pending</span>
+            {% endif %}
+        </div>
+
+        {% if active_assignments %}
+        <div class="divide-y divide-gray-100 dark:divide-zinc-800">
+            {% for assignment in active_assignments %}
+            <div class="p-6 hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <!-- Details -->
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            {% if assignment.claim.listing.food_type == 'cooked' %}
+                            <div class="size-10 rounded-xl bg-green-50 text-green-600 flex items-center justify-center">
+                                <span class="material-symbols-outlined">restaurant</span>
+                            </div>
+                            {% elif assignment.claim.listing.food_type == 'raw' %}
+                            <div class="size-10 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center">
+                                <span class="material-symbols-outlined">grocery</span>
+                            </div>
+                            {% else %}
+                            <div class="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                <span class="material-symbols-outlined">takeout_dining</span>
+                            </div>
+                            {% endif %}
+                            <div>
+                                <h3 class="font-bold text-black dark:text-white">{{
+                                    assignment.claim.listing.description|truncatechars:40 }}</h3>
+                                <p class="text-xs text-gray-400">from {{
+                                    assignment.claim.listing.donor.institution_name|default:assignment.claim.listing.donor.username
+                                    }}</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Quantity</p>
+                                <p class="text-sm font-bold text-black dark:text-white">{{
+                                    assignment.claim.listing.quantity_kg }} kg</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Type</p>
+                                <p class="text-sm font-bold text-black dark:text-white">{{
+                                    assignment.claim.listing.get_food_type_display }}</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Assigned</p>
+                                <p class="text-sm font-bold text-gray-600">{{ assignment.assigned_at|timesince }} ago
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Status</p>
+                                {% if assignment.status == 'assigned' %}
+                                <span
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700">
+                                    <span class="w-1 h-1 rounded-full bg-blue-500"></span> Assigned
+                                </span>
+                                {% elif assignment.status == 'picked_up' %}
+                                <span
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700">
+                                    <span class="w-1 h-1 rounded-full bg-amber-500"></span> Picked Up
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        {% if assignment.claim.listing.pickup_instructions %}
+                        <div
+                            class="mt-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-900/30">
+                            <p class="text-xs text-blue-700 dark:text-blue-400">
+                                <span class="font-bold">Pickup Instructions:</span> {{
+                                assignment.claim.listing.pickup_instructions }}
+                            </p>
+                        </div>
+                        {% endif %}
+
+                        {% if assignment.notes %}
+                        <p class="mt-2 text-xs text-gray-500 italic">Note: {{ assignment.notes }}</p>
+                        {% endif %}
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="flex flex-col gap-2 min-w-[160px]">
+                        {% if assignment.status == 'assigned' %}
+                        <form method="post" action="{% url 'update_pickup_status' assignment.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="picked_up">
+                            <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-all shadow-sm">
+                                <span class="material-symbols-outlined text-sm">inventory</span>
+                                Mark Picked Up
+                            </button>
+                        </form>
+                        {% elif assignment.status == 'picked_up' %}
+                        <form method="post" action="{% url 'update_pickup_status' assignment.id %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="status" value="delivered">
+                            <button type="submit"
+                                class="w-full flex items-center justify-center gap-2 px-4 py-3 text-xs font-bold text-black bg-primary hover:brightness-110 rounded-lg transition-all shadow-sm shadow-primary/20">
+                                <span class="material-symbols-outlined text-sm">check_circle</span>
+                                Mark Delivered
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <div
+                class="size-16 bg-gray-100 dark:bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span class="material-symbols-outlined text-3xl text-gray-400">local_shipping</span>
+            </div>
+            <p class="font-bold text-gray-500 text-sm">No active pickups right now</p>
+            <p class="text-xs text-gray-400 mt-1">Your NGO will assign pickups when food is claimed. Stay active!</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- ========== COMPLETED DELIVERIES ========== -->
+    {% if completed_assignments %}
+    <div
+        class="bg-white dark:bg-zinc-900 rounded-2xl shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+        <div class="p-6 flex items-center gap-3 border-b border-gray-100 dark:border-zinc-800">
+            <div class="size-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                <span class="material-symbols-outlined text-green-600">task_alt</span>
+            </div>
+            <div>
+                <h2 class="text-lg font-black text-black dark:text-white">Completed Deliveries</h2>
+                <p class="text-xs text-gray-400">Your past successful deliveries</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="bg-gray-50 dark:bg-zinc-800 text-left">
+                        <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Food</th>
+                        <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">From</th>
+                        <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Quantity</th>
+                        <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Delivered
+                        </th>
+                        <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-wider text-gray-400">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
+                    {% for assignment in completed_assignments %}
+                    <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
+                        <td class="px-4 py-3 font-bold text-black dark:text-white">{{
+                            assignment.claim.listing.description|truncatechars:30 }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{
+                            assignment.claim.listing.donor.institution_name|default:assignment.claim.listing.donor.username
+                            }}</td>
+                        <td class="px-4 py-3 text-gray-600">{{ assignment.claim.listing.quantity_kg }} kg</td>
+                        <td class="px-4 py-3 text-xs text-gray-400">{{ assignment.assigned_at|timesince }} ago</td>
+                        <td class="px-4 py-3">
+                            <span
+                                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
+                                <span class="w-1 h-1 rounded-full bg-green-500"></span> Delivered
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

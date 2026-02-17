@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from .models import Listing, Claim
+from .models import Listing, Claim, PickupAssignment
 from .forms import ListingForm
 
 @login_required
@@ -45,15 +45,15 @@ def claim_listing(request, listing_id):
 
 @login_required
 def approve_claim(request, claim_id):
-    # Single step approval: Pending -> Completed
+    # Approve the claim — NGO will then assign a volunteer for pickup
     claim = get_object_or_404(Claim, id=claim_id)
     if request.user == claim.listing.donor:
-        claim.status = 'completed'
+        claim.status = 'approved'
         claim.save()
         
-        # Mark listing as completed
+        # Mark listing as claimed (not completed until delivered)
         listing = claim.listing
-        listing.status = 'completed'
+        listing.status = 'claimed'
         listing.save()
         
     return redirect('donor_dashboard')
@@ -77,6 +77,13 @@ def claimant_dashboard(request):
     if request.user.role != 'claimant' and not request.user.is_superuser:
         return redirect('dashboard')
     
+    # Get volunteers for this NGO
+    from users.models import Volunteer
+    volunteers = Volunteer.objects.filter(ngo=request.user).order_by('-date_joined')
+    active_volunteers_list = volunteers.filter(status='active')
+    active_volunteers = active_volunteers_list.count()
+    total_volunteers = volunteers.count()
+    
     # Get active listings for list view
     listings = Listing.objects.filter(status='active').order_by('expiry_time')
     
@@ -86,10 +93,42 @@ def claimant_dashboard(request):
         status='pending'
     ).values_list('listing_id', flat=True)
 
+    # Get approved claims (ready for volunteer assignment)
+    approved_claims = Claim.objects.filter(
+        claimant=request.user,
+        status='approved'
+    ).select_related('listing', 'listing__donor').order_by('-claimed_at')
+
     return render(request, 'listings/claimant_dashboard.html', {
         'listings': listings, 
-        'pending_claim_ids': my_pending_claims_ids
+        'pending_claim_ids': my_pending_claims_ids,
+        'volunteers': volunteers,
+        'active_volunteers': active_volunteers,
+        'active_volunteers_list': active_volunteers_list,
+        'total_volunteers': total_volunteers,
+        'approved_claims': approved_claims,
     })
+
+
+@login_required
+def assign_volunteer(request, claim_id):
+    """NGO assigns an active volunteer to pick up an approved claim."""
+    if request.user.role != 'claimant' or request.method != 'POST':
+        return redirect('dashboard')
+    
+    from users.models import Volunteer
+    claim = get_object_or_404(Claim, id=claim_id, claimant=request.user, status='approved')
+    volunteer_id = request.POST.get('volunteer_id')
+    volunteer = get_object_or_404(Volunteer, id=volunteer_id, ngo=request.user, status='active')
+    
+    # Create pickup assignment
+    PickupAssignment.objects.create(
+        claim=claim,
+        volunteer=volunteer,
+        notes=request.POST.get('notes', '')
+    )
+    
+    return redirect('claimant_dashboard')
 
 from django.http import JsonResponse
 

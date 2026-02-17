@@ -51,3 +51,20 @@ class Claim(models.Model):
 
     def __str__(self):
         return f"Claim for {self.listing} by {self.claimant.username}"
+
+
+class PickupAssignment(models.Model):
+    STATUS_CHOICES = (
+        ('assigned', 'Assigned'),
+        ('picked_up', 'Picked Up'),
+        ('delivered', 'Delivered'),
+    )
+
+    claim = models.ForeignKey(Claim, on_delete=models.CASCADE, related_name='pickup_assignments')
+    volunteer = models.ForeignKey('users.Volunteer', on_delete=models.CASCADE, related_name='pickup_assignments')
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='assigned')
+    notes = models.TextField(blank=True)
+
+    def __str__(self):
+        return f"Pickup #{self.id} - {self.claim.listing} → {self.volunteer.name}"

@@ -129,3 +129,7 @@ AUTH_USER_MODEL = "users.User"
 # Redirects
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Email (console for development — emails print to terminal)
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+DEFAULT_FROM_EMAIL = 'noreply@foodsaver.in'
