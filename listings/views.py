@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
 from .models import Listing, Claim, PickupAssignment
 from .forms import ListingForm
 
@@ -21,6 +22,12 @@ def donor_dashboard(request):
     if request.user.role != 'donor' and not request.user.is_superuser:
          return redirect('dashboard')
          
+    # Auto-expire listings past their expiry time
+    Listing.objects.filter(
+        status='active',
+        expiry_time__lte=timezone.now()
+    ).update(status='expired')
+
     listings = Listing.objects.filter(donor=request.user).order_by('-created_at')
     
     # Split claims into Pending and History
@@ -28,10 +35,38 @@ def donor_dashboard(request):
     # History includes completed, rejected, and approved (if any legacy exist)
     history_claims = Claim.objects.filter(listing__in=listings, status__in=['completed', 'rejected', 'approved']).order_by('-claimed_at')
     
+    # Get pickup assignments for this restaurant's listings (with OTPs)
+    active_pickups_qs = PickupAssignment.objects.filter(
+        claim__listing__in=listings,
+        status__in=['assigned', 'picked_up'],
+    ).select_related(
+        'claim', 'claim__listing', 'claim__claimant', 'volunteer', 'otp'
+    ).order_by('-assigned_at')
+
+    # Pre-process pickups so template only needs short, simple variables
+    pickup_list = []
+    for p in active_pickups_qs:
+        otp_obj = getattr(p, 'otp', None)
+        pickup_list.append({
+            'id': p.id,
+            'ftype': p.claim.listing.food_type,
+            'desc': p.claim.listing.description,
+            'qty': p.claim.listing.quantity_kg,
+            'vname': p.volunteer.name,
+            'ngo': getattr(p.claim.claimant, 'institution_name', '') or p.claim.claimant.username,
+            'assigntime': p.assigned_at,
+            'pstatus': p.status,
+            'otp_code': otp_obj.code if otp_obj else '',
+            'otp_verified': otp_obj.is_verified if otp_obj else False,
+            'otp_verified_at': otp_obj.verified_at if otp_obj else None,
+        })
+
     return render(request, 'listings/donor_dashboard.html', {
         'listings': listings, 
         'pending_claims': pending_claims,
-        'history_claims': history_claims
+        'history_claims': history_claims,
+        'pickup_list': pickup_list,
+        'pickup_count': len(pickup_list),
     })
 
 @login_required
@@ -84,8 +119,17 @@ def claimant_dashboard(request):
     active_volunteers = active_volunteers_list.count()
     total_volunteers = volunteers.count()
     
-    # Get active listings for list view
-    listings = Listing.objects.filter(status='active').order_by('expiry_time')
+    # Auto-expire listings that have passed their expiry time
+    Listing.objects.filter(
+        status='active',
+        expiry_time__lte=timezone.now()
+    ).update(status='expired')
+
+    # Get active (non-expired) listings for list view
+    listings = Listing.objects.filter(
+        status='active',
+        expiry_time__gt=timezone.now()
+    ).order_by('expiry_time')
     
     # Get IDs of listings this user has already claimed (pending)
     my_pending_claims_ids = Claim.objects.filter(
@@ -100,6 +144,14 @@ def claimant_dashboard(request):
         claimant=request.user, 
         status='pending'
     ).select_related('listing', 'listing__donor').order_by('-claimed_at')
+
+    # Pre-process pending claims for template (short variable names)
+    pending_list = []
+    for c in pending_claims:
+        pending_list.append({
+            'id': c.id,
+            'desc': c.listing.description,
+        })
     
     # 2. Approved Claims (Need assignment)
     # Get all approved claims first
@@ -117,9 +169,31 @@ def claimant_dashboard(request):
     unassigned_claims = approved_claims_qs.exclude(id__in=assigned_claim_ids)
     
     # Filter: Assigned (In Progress)
-    assigned_pickup_tasks = PickupAssignment.objects.filter(
+    assigned_pickup_tasks_qs = PickupAssignment.objects.filter(
         claim__in=approved_claims_qs
     ).select_related('claim', 'volunteer', 'claim__listing', 'claim__listing__donor').order_by('-assigned_at')
+
+    # Pre-process unassigned claims for template (short variable names)
+    unassigned_list = []
+    for c in unassigned_claims:
+        donor = c.listing.donor
+        unassigned_list.append({
+            'id': c.id,
+            'desc': c.listing.description,
+            'donor_name': getattr(donor, 'institution_name', '') or donor.username,
+            'qty': c.listing.quantity_kg,
+        })
+
+    # Pre-process assigned pickup tasks for template
+    assigned_tasks_list = []
+    for t in assigned_pickup_tasks_qs:
+        assigned_tasks_list.append({
+            'id': t.id,
+            'desc': t.claim.listing.description,
+            'vname': t.volunteer.name,
+            'assigntime': t.assigned_at,
+            'status_display': t.get_status_display(),
+        })
 
     return render(request, 'listings/claimant_dashboard.html', {
         'listings': listings, 
@@ -133,8 +207,11 @@ def claimant_dashboard(request):
         
         # Claims Data
         'pending_claims': pending_claims,
+        'pending_list': pending_list,
         'unassigned_claims': unassigned_claims,
-        'assigned_pickup_tasks': assigned_pickup_tasks,
+        'unassigned_list': unassigned_list,
+        'assigned_pickup_tasks': assigned_pickup_tasks_qs,
+        'assigned_tasks_list': assigned_tasks_list,
     })
 
 

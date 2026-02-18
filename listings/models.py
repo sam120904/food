@@ -68,3 +68,27 @@ class PickupAssignment(models.Model):
 
     def __str__(self):
         return f"Pickup #{self.id} - {self.claim.listing} → {self.volunteer.name}"
+
+
+class PickupOTP(models.Model):
+    """
+    One-time 6-digit OTP for verifying food pickup handoffs.
+    Auto-created via signal when a PickupAssignment is created.
+    """
+    assignment = models.OneToOneField(
+        PickupAssignment,
+        on_delete=models.CASCADE,
+        related_name='otp',
+    )
+    code = models.CharField(max_length=6)
+    is_verified = models.BooleanField(default=False)
+    verified_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Pickup OTP'
+        verbose_name_plural = 'Pickup OTPs'
+
+    def __str__(self):
+        status = '✓ Verified' if self.is_verified else '⏳ Pending'
+        return f"OTP for Pickup #{self.assignment_id} [{status}]"

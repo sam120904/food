@@ -4,6 +4,9 @@ import string
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login, authenticate
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 from django.core.mail import send_mail
 from django.conf import settings
 from .forms import CustomUserCreationForm
@@ -164,10 +167,45 @@ def volunteer_dashboard(request):
     active_assignments = assignments.filter(status__in=['assigned', 'picked_up'])
     completed_assignments = assignments.filter(status='delivered')
 
+    # Pre-process active assignments for template (short variable names)
+    active_list = []
+    for a in active_assignments:
+        listing = a.claim.listing
+        donor = listing.donor
+        active_list.append({
+            'id': a.id,
+            'desc': listing.description,
+            'ftype': listing.food_type,
+            'ftype_display': listing.get_food_type_display(),
+            'qty': listing.quantity_kg,
+            'donor_name': getattr(donor, 'institution_name', '') or donor.username,
+            'assigntime': a.assigned_at,
+            'status': a.status,
+            'pickup_instructions': getattr(listing, 'pickup_instructions', ''),
+            'notes': a.notes if hasattr(a, 'notes') else '',
+        })
+
+    # Pre-process completed assignments for template
+    completed_list = []
+    for a in completed_assignments:
+        listing = a.claim.listing
+        donor = listing.donor
+        completed_list.append({
+            'id': a.id,
+            'desc': listing.description,
+            'donor_name': getattr(donor, 'institution_name', '') or donor.username,
+            'qty': listing.quantity_kg,
+            'assigntime': a.assigned_at,
+        })
+
     return render(request, 'users/volunteer_dashboard.html', {
         'volunteer': volunteer,
         'active_assignments': active_assignments,
         'completed_assignments': completed_assignments,
+        'active_list': active_list,
+        'completed_list': completed_list,
+        'active_count': len(active_list),
+        'completed_count': len(completed_list),
     })
 
 
@@ -185,7 +223,11 @@ def toggle_volunteer_status(request):
 
 @login_required
 def update_pickup_status(request, assignment_id):
-    """Volunteer marks a pickup as picked_up or delivered."""
+    """Volunteer marks a pickup as delivered.
+    
+    SECURITY: 'picked_up' status can ONLY be set via OTP verification.
+    This view only allows transitioning from picked_up → delivered.
+    """
     if request.user.role != 'volunteer' or request.method != 'POST':
         return redirect('dashboard')
 
@@ -193,20 +235,70 @@ def update_pickup_status(request, assignment_id):
     assignment = get_object_or_404(PickupAssignment, id=assignment_id, volunteer__user=request.user)
 
     new_status = request.POST.get('status', '')
-    if new_status in ('picked_up', 'delivered'):
-        assignment.status = new_status
+
+    # Block manual picked_up — must go through OTP verification
+    if new_status == 'picked_up':
+        messages.error(request, 'Food pickup must be verified with OTP from the restaurant.')
+        return redirect('volunteer_dashboard')
+
+    if new_status == 'delivered' and assignment.status == 'picked_up':
+        assignment.status = 'delivered'
         assignment.save()
 
-        # If delivered, mark the claim as completed
-        if new_status == 'delivered':
-            claim = assignment.claim
-            claim.status = 'completed'
-            claim.save()
-            listing = claim.listing
-            listing.status = 'completed'
-            listing.save()
+        # Mark the claim and listing as completed
+        claim = assignment.claim
+        claim.status = 'completed'
+        claim.save()
+        listing = claim.listing
+        listing.status = 'completed'
+        listing.save()
+        messages.success(request, 'Delivery confirmed! Great work.')
 
     return redirect('volunteer_dashboard')
+
+
+@login_required
+@require_POST
+def verify_pickup_otp(request, assignment_id):
+    """Verify the 6-digit OTP to confirm food pickup.
+    
+    This is the ONLY way to transition an assignment to 'picked_up' status.
+    """
+    if request.user.role != 'volunteer':
+        return JsonResponse({'success': False, 'error': 'Unauthorized'}, status=403)
+
+    from listings.models import PickupAssignment, PickupOTP
+    from django.utils import timezone
+
+    assignment = get_object_or_404(
+        PickupAssignment,
+        id=assignment_id,
+        volunteer__user=request.user,
+        status='assigned',
+    )
+
+    otp_code = request.POST.get('otp_code', '').strip()
+
+    try:
+        pickup_otp = assignment.otp
+    except PickupOTP.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'No OTP found for this assignment.'}, status=400)
+
+    if pickup_otp.is_verified:
+        return JsonResponse({'success': False, 'error': 'OTP has already been used.'}, status=400)
+
+    if pickup_otp.code != otp_code:
+        return JsonResponse({'success': False, 'error': 'Incorrect OTP. Please check with the restaurant.'}, status=400)
+
+    # OTP is correct — mark verified and update assignment status
+    pickup_otp.is_verified = True
+    pickup_otp.verified_at = timezone.now()
+    pickup_otp.save()
+
+    assignment.status = 'picked_up'
+    assignment.save()
+
+    return JsonResponse({'success': True, 'message': 'OTP verified! Food marked as picked up.'})
 
 
 # ======== EXISTING VIEWS ========

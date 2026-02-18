@@ -240,7 +240,7 @@
 
         <div class="space-y-6">
             <!-- 1. ACTION REQUIRED: Unassigned Claims -->
-            {% if unassigned_claims %}
+            {% if unassigned_list %}
             <div>
                 <div class="flex items-center gap-2 mb-3">
                     <span
@@ -249,7 +249,7 @@
                     <h3 class="text-sm font-bold text-black dark:text-white">Ready for Assignment</h3>
                 </div>
                 <div class="space-y-3">
-                    {% for claim in unassigned_claims %}
+                    {% for c in unassigned_list %}
                     <div
                         class="p-4 rounded-xl border border-red-200 dark:border-red-900/50 bg-red-50/50 dark:bg-red-900/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div class="flex items-center gap-3 flex-1">
@@ -258,14 +258,12 @@
                                 <span class="material-symbols-outlined text-red-500">priority_high</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-black dark:text-white text-sm">{{ claim.listing.description|truncatechars:35 }}</h3>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
-                                    {{ claim.listing.donor.institution_name|default:claim.listing.donor.username }} · {{
-                                    claim.listing.quantity_kg }} kg
-                                </p>
+                                <h3 class="font-bold text-black dark:text-white text-sm">{{c.desc|truncatechars:35}}
+                                </h3>
+                                <p class="text-xs text-gray-500 dark:text-gray-400">{{c.donor_name}} · {{c.qty}} kg</p>
                             </div>
                         </div>
-                        <form method="post" action="{% url 'assign_volunteer' claim.id %}"
+                        <form method="post" action="{% url 'assign_volunteer' c.id %}"
                             class="flex items-center gap-2 w-full md:w-auto">
                             {% csrf_token %}
                             <select name="volunteer_id" required
@@ -288,7 +286,7 @@
             {% endif %}
 
             <!-- 2. IN PROGRESS: Assigned Claims -->
-            {% if assigned_pickup_tasks %}
+            {% if assigned_tasks_list %}
             <div>
                 <div class="flex items-center gap-2 mb-3">
                     <span
@@ -297,7 +295,7 @@
                     <h3 class="text-sm font-bold text-black dark:text-white">Assigned Pickups</h3>
                 </div>
                 <div class="space-y-3">
-                    {% for task in assigned_pickup_tasks %}
+                    {% for t in assigned_tasks_list %}
                     <div
                         class="p-4 rounded-xl border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div class="flex items-center gap-3 flex-1">
@@ -307,21 +305,22 @@
                                     class="material-symbols-outlined text-blue-600 dark:text-blue-400">local_shipping</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-black dark:text-white text-sm">{{ task.claim.listing.description|truncatechars:35 }}</h3>
+                                <h3 class="font-bold text-black dark:text-white text-sm">{{t.desc|truncatechars:35}}
+                                </h3>
                                 <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
                                     <span class="flex items-center gap-1">
                                         <span class="material-symbols-outlined text-[10px]">person</span>
-                                        {{ task.volunteer.name }}
+                                        {{t.vname}}
                                     </span>
                                     <span>•</span>
-                                    <span>Assigned {{ task.assigned_at|timesince }} ago</span>
+                                    <span>Assigned {{t.assigntime|timesince}} ago</span>
                                 </div>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
                             <span
                                 class="px-3 py-1 bg-gray-100 dark:bg-zinc-700 text-gray-600 dark:text-gray-300 text-xs font-bold rounded-full">
-                                {{ task.get_status_display }}
+                                {{t.status_display}}
                             </span>
                         </div>
                     </div>
@@ -331,7 +330,7 @@
             {% endif %}
 
             <!-- 3. PENDING: Waitlist -->
-            {% if pending_claims %}
+            {% if pending_list %}
             <div>
                 <div class="flex items-center gap-2 mb-3">
                     <span
@@ -339,7 +338,7 @@
                     <h3 class="text-sm font-bold text-black dark:text-white">Pending Approval</h3>
                 </div>
                 <div class="space-y-3">
-                    {% for claim in pending_claims %}
+                    {% for p in pending_list %}
                     <div
                         class="p-4 rounded-xl border border-dashed border-gray-200 dark:border-zinc-700 bg-gray-50/50 dark:bg-zinc-800/30 flex items-center justify-between gap-4">
                         <div class="flex items-center gap-3">
@@ -348,7 +347,8 @@
                                 <span class="material-symbols-outlined text-gray-400">hourglass_empty</span>
                             </div>
                             <div>
-                                <h3 class="font-bold text-gray-600 dark:text-gray-400 text-sm">{{ claim.listing.description|truncatechars:35 }}</h3>
+                                <h3 class="font-bold text-gray-600 dark:text-gray-400 text-sm">
+                                    {{p.desc|truncatechars:35}}</h3>
                                 <p class="text-xs text-gray-400">Waiting for donor approval</p>
                             </div>
                         </div>

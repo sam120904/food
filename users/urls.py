@@ -16,4 +16,5 @@ urlpatterns = [
     path('volunteer/dashboard/', views.volunteer_dashboard, name='volunteer_dashboard'),
     path('volunteer/toggle-status/', views.toggle_volunteer_status, name='toggle_volunteer_status'),
     path('volunteer/pickup/<int:assignment_id>/update/', views.update_pickup_status, name='update_pickup_status'),
+    path('volunteer/pickup/<int:assignment_id>/verify-otp/', views.verify_pickup_otp, name='verify_pickup_otp'),
 ]

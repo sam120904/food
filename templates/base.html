@@ -74,8 +74,6 @@
                     href="{% url 'leaderboard' %}">Leaderboard</a>
                 <a class="text-[#0d1b0d] dark:text-slate-200 text-sm font-semibold hover:text-primary transition-colors"
                     href="{% url 'connected_ngos' %}">Connected NGOs</a>
-                <a class="text-[#0d1b0d] dark:text-slate-200 text-sm font-semibold hover:text-primary transition-colors"
-                    href="{% url 'analytics_dashboard' %}">AI Analytics</a>
 
                 {% elif user.role == 'claimant' %}
                 <a class="text-[#0d1b0d] dark:text-slate-200 text-sm font-semibold hover:text-primary transition-colors"
@@ -84,6 +82,8 @@
                     href="{% url 'my_claims' %}">My Claims</a>
                 <a class="text-[#0d1b0d] dark:text-slate-200 text-sm font-semibold hover:text-primary transition-colors"
                     href="{% url 'history' %}">History</a>
+                <a class="text-[#0d1b0d] dark:text-slate-200 text-sm font-semibold hover:text-primary transition-colors"
+                    href="{% url 'analytics_dashboard' %}">AI Analytics</a>
 
                 {% elif user.role == 'volunteer' %}
                 <a class="text-[#0d1b0d] dark:text-slate-200 text-sm font-semibold hover:text-primary transition-colors"

@@ -54,7 +54,94 @@
         </a>
     </div>
 
-    <!-- Main Content Grid -->
+    <!-- ========== PICKUP OTP VERIFICATION CODES ========== -->
+    {% if pickup_list %}
+    <div
+        class="bg-white dark:bg-[#152915] rounded-2xl border border-[#cfe7cf] dark:border-[#2a3d2a] shadow-sm overflow-hidden">
+        <div
+            class="p-6 border-b border-[#cfe7cf] dark:border-[#2a3d2a] bg-[#f9fbf9] dark:bg-white/5 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-blue-50 dark:bg-blue-900/20 flex items-center justify-center">
+                    <span class="material-symbols-outlined text-blue-600">pin</span>
+                </div>
+                <div>
+                    <h3 class="font-bold text-lg text-[#0d1b0d] dark:text-white">Pickup Verification Codes</h3>
+                    <p class="text-xs text-slate-400">Share this OTP only with the assigned volunteer at pickup</p>
+                </div>
+            </div>
+            <span class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-full">{{pickup_count}}
+                Active</span>
+        </div>
+        <div class="divide-y divide-[#cfe7cf] dark:divide-[#2a3d2a]">
+            {% for p in pickup_list %}
+            <div class="p-6 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div
+                                class="size-10 rounded-xl bg-green-50 dark:bg-green-900/20 flex items-center justify-center">
+                                {% if p.ftype == 'cooked' %}
+                                <span class="material-symbols-outlined text-green-600">restaurant</span>
+                                {% elif p.ftype == 'raw' %}
+                                <span class="material-symbols-outlined text-green-600">grocery</span>
+                                {% else %}
+                                <span class="material-symbols-outlined text-green-600">takeout_dining</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-[#0d1b0d] dark:text-white">{{p.desc|truncatechars:40}}</h4>
+                                <p class="text-xs text-slate-500">Volunteer: <span class="font-bold">{{p.vname}}</span>
+                                    &bull; NGO: <span class="font-bold">{{p.ngo}}</span></p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-3 text-sm">
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quantity</p>
+                                <p class="font-bold text-[#0d1b0d] dark:text-white">{{p.qty}} kg</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned</p>
+                                <p class="font-bold text-slate-600">{{p.assigntime|timesince}} ago</p>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Status</p>
+                                {% if p.pstatus == 'assigned' %}
+                                <span
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 text-blue-700"><span
+                                        class="w-1 h-1 rounded-full bg-blue-500"></span> Awaiting Pickup</span>
+                                {% else %}
+                                <span
+                                    class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-700"><span
+                                        class="w-1 h-1 rounded-full bg-amber-500"></span> Picked Up</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="min-w-[180px] text-center">
+                        {% if p.otp_verified %}
+                        <div
+                            class="bg-green-50 dark:bg-green-900/20 border-2 border-green-200 dark:border-green-800 rounded-xl p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-green-600 mb-1">Verified
+                                &#10003;</p>
+                            <p class="text-2xl font-black tracking-[0.3em] text-green-700 font-mono">{{p.otp_code}}</p>
+                            <p class="text-[10px] text-green-500 mt-1">{{p.otp_verified_at|timesince}} ago</p>
+                        </div>
+                        {% else %}
+                        <div
+                            class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-200 dark:border-blue-800 rounded-xl p-4">
+                            <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600 mb-1">Verification
+                                OTP</p>
+                            <p class="text-3xl font-black tracking-[0.3em] text-blue-700 font-mono">{{p.otp_code}}</p>
+                            <p class="text-[10px] text-blue-400 mt-1">Share with volunteer at pickup</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
 
     <!-- Live Listings Section -->
     <div class="mb-8">
@@ -115,9 +202,6 @@
                 <p class="text-sm text-slate-400">Post a new surplus to see it here.</p>
             </div>
             {% endfor %}
-            <!-- Check if there are any active listings, logic limitation in basic for-loop filter. 
-                 If listings exists but none are active, the empty block won't trigger. 
-                 Ideally view should filter, but for now this works for non-empty lists. -->
         </div>
     </div>
 

@@ -65,11 +65,16 @@ def predict_surplus(request):
 
 @login_required
 def analytics_dashboard(request):
-    if request.user.role != 'donor':
+    if request.user.role != 'claimant':
         return redirect('dashboard')
         
-    # Get recent listings for the hotel (donor)
-    listings = Listing.objects.filter(donor=request.user).order_by('-created_at')
+    # Get claims made by this NGO (claimant)
+    claims = Claim.objects.filter(claimant=request.user).order_by('-claimed_at')
+    
+    # Get listings associated with this NGO's claims for analysis
+    from listings.models import PickupAssignment
+    claimed_listing_ids = claims.values_list('listing_id', flat=True)
+    listings = Listing.objects.filter(id__in=claimed_listing_ids).order_by('-created_at')
     
     # Prepare data for AI analysis (last 20 items to identify trends)
     recent_items = listings[:20]
@@ -81,14 +86,15 @@ def analytics_dashboard(request):
             'food_type': item.get_food_type_display()
         })
     
-    total_listings = listings.count()
-    total_quantity = listings.aggregate(Sum('quantity_kg'))['quantity_kg__sum'] or 0
+    total_claims = claims.count()
+    completed_claims = claims.filter(status='completed')
+    total_quantity = completed_claims.aggregate(Sum('listing__quantity_kg'))['listing__quantity_kg__sum'] or 0
     
     # Get Real AI Prediction
     prediction = get_surplus_prediction(ai_context_data)
     
     context = {
-        'total_listings': total_listings,
+        'total_claims': total_claims,
         'total_quantity': total_quantity,
         'prediction': prediction,
         'recent_listings': recent_items,  # Pass listings to template for display
