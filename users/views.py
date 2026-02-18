@@ -326,13 +326,6 @@ def connected_ngos(request):
     if request.user.role != 'donor':
         return redirect('dashboard')
 
-    from listings.models import Claim
+    all_ngos = User.objects.filter(role='claimant')
 
-    connected_claimants_ids = Claim.objects.filter(
-        listing__donor=request.user,
-        status__in=['approved', 'completed']
-    ).values_list('claimant_id', flat=True).distinct()
-
-    connected_ngos_list = User.objects.filter(id__in=connected_claimants_ids)
-
-    return render(request, 'users/connected_ngos.html', {'ngos': connected_ngos_list})
+    return render(request, 'users/connected_ngos.html', {'ngos': all_ngos})

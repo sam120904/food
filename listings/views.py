@@ -118,6 +118,21 @@ def claimant_dashboard(request):
     active_volunteers_list = volunteers.filter(status='active')
     active_volunteers = active_volunteers_list.count()
     total_volunteers = volunteers.count()
+
+    # Pre-process volunteers for template (short variable names)
+    vol_list = []
+    for v in volunteers:
+        vol_list.append({
+            'vid': v.volunteer_id,
+            'name': v.name,
+            'initial': v.name[:1].upper() if v.name else '?',
+            'phone': v.phone or '\u2014',
+            'email': v.email or '\u2014',
+            'addr': v.address or '\u2014',
+            'status': v.status,
+            'joined': v.date_joined,
+            'id': v.id,
+        })
     
     # Auto-expire listings that have passed their expiry time
     Listing.objects.filter(
@@ -201,6 +216,7 @@ def claimant_dashboard(request):
         
         # Volunteer Data
         'volunteers': volunteers,
+        'vol_list': vol_list,
         'active_volunteers': active_volunteers,
         'active_volunteers_list': active_volunteers_list,
         'total_volunteers': total_volunteers,

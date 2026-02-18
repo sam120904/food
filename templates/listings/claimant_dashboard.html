@@ -74,28 +74,27 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-zinc-800">
-                        {% for vol in volunteers %}
+                        {% for v in vol_list %}
                         <tr class="hover:bg-gray-50 dark:hover:bg-zinc-800/50 transition-colors">
                             <td class="px-4 py-3">
                                 <span
-                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">{{
-                                    vol.volunteer_id }}</span>
+                                    class="font-mono text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded">{{v.vid}}</span>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2">
                                     <div
                                         class="size-7 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">
-                                        {{ vol.name|slice:":1"|upper }}
+                                        {{v.initial}}
                                     </div>
-                                    <span class="font-bold text-black dark:text-white">{{ vol.name }}</span>
+                                    <span class="font-bold text-black dark:text-white">{{v.name}}</span>
                                 </div>
                             </td>
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ vol.phone|default:"—" }}</td>
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ vol.email|default:"—" }}</td>
-                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[150px] truncate">{{
-                                vol.address|default:"—" }}</td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{v.phone}}</td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{v.email}}</td>
+                            <td class="px-4 py-3 text-gray-600 dark:text-gray-400 max-w-[150px] truncate">{{v.addr}}
+                            </td>
                             <td class="px-4 py-3">
-                                {% if vol.status == 'active' %}
+                                {% if v.status == 'active' %}
                                 <span
                                     class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">
                                     <span class="w-1 h-1 rounded-full bg-green-500"></span> Active
@@ -107,7 +106,7 @@
                                 </span>
                                 {% endif %}
                             </td>
-                            <td class="px-4 py-3 text-xs text-gray-400">{{ vol.date_joined|date:"M d, Y" }}</td>
+                            <td class="px-4 py-3 text-xs text-gray-400">{{v.joined|date:"M d, Y"}}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
