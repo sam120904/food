@@ -19,12 +19,15 @@
                 <div>
                     <h1 class="text-2xl font-black text-black dark:text-white">{{ volunteer.name }}</h1>
                     <div class="flex items-center gap-3 mt-1">
-                        <span
-                            class="font-mono text-xs font-bold text-blue-600 bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded">{{
-                            volunteer.volunteer_id }}</span>
+                        <!-- prettier-ignore -->
+                        <span class="
+                            font-mono text-xs font-bold text-blue-600
+                            bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded
+                        ">
+                            {{ vol_id }}
+                        </span>
                         <span class="text-xs text-gray-400">•</span>
-                        <span class="text-xs text-gray-500">{{
-                            volunteer.ngo.institution_name|default:volunteer.ngo.username }}</span>
+                        <span class="text-xs text-gray-500">{{ ngo_name }}</span>
                     </div>
                 </div>
             </div>

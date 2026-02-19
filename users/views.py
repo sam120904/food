@@ -198,8 +198,13 @@ def volunteer_dashboard(request):
             'assigntime': a.assigned_at,
         })
 
+    vol_id = volunteer.volunteer_id
+    ngo_name = getattr(volunteer.ngo, 'institution_name', '') or volunteer.ngo.username
+
     return render(request, 'users/volunteer_dashboard.html', {
         'volunteer': volunteer,
+        'vol_id': vol_id,
+        'ngo_name': ngo_name,
         'active_assignments': active_assignments,
         'completed_assignments': completed_assignments,
         'active_list': active_list,
